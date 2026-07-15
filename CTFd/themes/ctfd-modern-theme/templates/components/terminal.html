@@ -1,0 +1,769 @@
+<style>
+  
+  #cyber-terminal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #0a0a0a;
+    display: none;
+    flex-direction: column;
+    transition: opacity 0.5s ease, filter 0.5s ease;
+  }
+
+  #cyber-terminal.terminal-visible {
+    display: flex;
+  }
+
+  #cyber-terminal.terminal-exit {
+    opacity: 0;
+    filter: blur(6px);
+    pointer-events: none;
+  }
+
+  body.terminal-open {
+    overflow: hidden !important;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: #111;
+    border-bottom: 1px solid rgba(32, 201, 151, 0.15);
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .terminal-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+
+  .terminal-dot:hover { filter: brightness(1.3); }
+  .terminal-dot.red { background: #ff5f57; }
+  .terminal-dot.yellow { background: #febc2e; }
+  .terminal-dot.green { background: #28c840; }
+
+  .terminal-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    margin-left: 8px;
+    letter-spacing: 1px;
+    flex: 1;
+  }
+
+  .terminal-shortcut-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.5px;
+  }
+
+  .terminal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: #c9d1d9;
+  }
+
+  .terminal-body::-webkit-scrollbar { width: 6px; }
+  .terminal-body::-webkit-scrollbar-track { background: transparent; }
+  .terminal-body::-webkit-scrollbar-thumb {
+    background: rgba(32, 201, 151, 0.2);
+    border-radius: 3px;
+  }
+
+  .t-line { margin-bottom: 1px; white-space: pre-wrap; }
+  .t-ok { color: #28c840; }
+  .t-fail { color: #ff5f57; }
+  .t-warn { color: #febc2e; }
+  .t-info { color: #20c997; }
+  .t-dim { color: #555; }
+  .t-bold { color: #fff; font-weight: 700; }
+  .t-ascii { color: #20c997; font-weight: 700; }
+  .t-cmd { color: #58a6ff; }
+  .t-desc { color: #8b949e; }
+
+  .terminal-input-area {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    background: #111;
+    border-top: 1px solid rgba(32, 201, 151, 0.15);
+    flex-shrink: 0;
+  }
+
+  .prompt-symbol {
+    color: #20c997;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-right: 8px;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e6edf3;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    caret-color: #20c997;
+  }
+
+  .terminal-input::placeholder { color: #444; }
+
+  
+  #cyber-terminal::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  
+  .progress-bar-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-track {
+    display: inline-block;
+    width: 200px;
+    height: 8px;
+    background: #1a1a1a;
+    border: 1px solid rgba(32, 201, 151, 0.2);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #20c997;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  .progress-pct {
+    color: #20c997;
+    font-size: 0.8rem;
+    min-width: 40px;
+  }
+
+  
+  #terminal-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9998;
+    width: 48px;
+    height: 48px;
+    background: rgba(32, 201, 151, 0.1);
+    border: 1px solid rgba(32, 201, 151, 0.3);
+    border-radius: 12px;
+    color: #20c997;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  #terminal-toggle-btn:hover {
+    background: rgba(32, 201, 151, 0.2);
+    box-shadow: 0 0 20px rgba(32, 201, 151, 0.3), 0 4px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+
+  #terminal-toggle-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+  }
+
+  
+  @media (max-width: 768px) {
+    .terminal-body {
+      font-size: 0.75rem;
+      padding: 12px 14px;
+    }
+    .terminal-input { font-size: 0.75rem; }
+    .prompt-symbol { font-size: 0.75rem; }
+    .progress-track { width: 120px; }
+    .terminal-shortcut-hint { display: none; }
+    #terminal-toggle-btn {
+      width: 42px;
+      height: 42px;
+      bottom: 16px;
+      right: 16px;
+    }
+  }
+</style>
+
+<!-- Terminal HTML -->
+<div id="cyber-terminal">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="terminal-dot red" id="terminal-dot-close" title="Close terminal"></span>
+      <span class="terminal-dot yellow"></span>
+      <span class="terminal-dot green"></span>
+    </div>
+    <span class="terminal-title">{{ Configs.ctf_name }} — secure shell</span>
+    <span class="terminal-shortcut-hint">Ctrl+` to toggle</span>
+  </div>
+
+  <div class="terminal-body" id="terminal-output"></div>
+
+  <div class="terminal-input-area" id="input-area" style="display: none;">
+    <span class="prompt-symbol" id="prompt-text">visitor@ctf:~$</span>
+    <input
+      type="text"
+      class="terminal-input"
+      id="terminal-input"
+      placeholder="type 'help' for commands..."
+      autocomplete="off"
+      spellcheck="false"
+    >
+  </div>
+</div>
+
+<button id="terminal-toggle-btn" title="Terminal (Ctrl+`)">
+  <i class="fas fa-terminal"></i>
+</button>
+
+<script>
+window.CyberTerminal = (function() {
+  
+  const CTF_NAME = {{ Configs.ctf_name | tojson }};
+  const CTF_START = {{ Configs.start | tojson }};
+  const CTF_END = {{ Configs.end | tojson }};
+  const IS_AUTHED = {{ "true" if authed() else "false" }};
+  const USER_NAME = {{ User.name | tojson }};
+  const USER_MODE = {{ Configs.user_mode | tojson }};
+  const REGISTER_URL = {{ Configs.registration_visibility | tojson }};
+  const STORAGE_KEYS = {
+    booted: 'ctf_terminal_booted',
+    output: 'ctf_terminal_output',
+    history: 'ctf_terminal_history',
+    scroll: 'ctf_terminal_scroll',
+  };
+
+  
+  const outputEl = document.getElementById('terminal-output');
+  const inputArea = document.getElementById('input-area');
+  const inputEl = document.getElementById('terminal-input');
+  const terminalEl = document.getElementById('cyber-terminal');
+  const toggleBtn = document.getElementById('terminal-toggle-btn');
+  const promptText = document.getElementById('prompt-text');
+  const dotClose = document.getElementById('terminal-dot-close');
+
+  let isOpen = false;
+  let isBooting = false;
+  let bootComplete = false;
+  let commandHistory = [];
+  let historyIndex = -1;
+
+  
+  function escapeHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+  }
+
+  function addLine(html, cls) {
+    const line = document.createElement('div');
+    line.className = 't-line' + (cls ? ' ' + cls : '');
+    line.innerHTML = html;
+    outputEl.appendChild(line);
+    outputEl.scrollTop = outputEl.scrollHeight;
+  }
+
+  function addBlank() { addLine('&nbsp;'); }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function setPrompt() {
+    if (IS_AUTHED && USER_NAME) {
+      promptText.textContent = escapeHtml(USER_NAME) + '@ctf:~$';
+    }
+  }
+
+  
+  function saveState() {
+    try {
+      const lines = outputEl.querySelectorAll('.t-line');
+      if (lines.length > 300) {
+        const toRemove = lines.length - 300;
+        for (let i = 0; i < toRemove; i++) {
+          lines[i].remove();
+        }
+      }
+      localStorage.setItem(STORAGE_KEYS.output, outputEl.innerHTML);
+      localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(commandHistory.slice(0, 50)));
+      localStorage.setItem(STORAGE_KEYS.scroll, String(outputEl.scrollTop));
+    } catch (e) {  }
+  }
+
+  function restoreState() {
+    const savedOutput = localStorage.getItem(STORAGE_KEYS.output);
+    const savedHistory = localStorage.getItem(STORAGE_KEYS.history);
+    const savedScroll = localStorage.getItem(STORAGE_KEYS.scroll);
+
+    if (savedOutput) {
+      outputEl.innerHTML = savedOutput;
+    }
+    if (savedHistory) {
+      try { commandHistory = JSON.parse(savedHistory); } catch(e) { commandHistory = []; }
+    }
+
+    setPrompt();
+    inputArea.style.display = 'flex';
+    bootComplete = true;
+
+    requestAnimationFrame(() => {
+      if (savedScroll) {
+        outputEl.scrollTop = parseInt(savedScroll) || 0;
+      } else {
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+    });
+  }
+
+  
+  const bootLines = [
+    { text: 'BIOS initialization...', delay: 60, cls: 't-dim' },
+    { text: '[  BOOT  ] ' + CTF_NAME + ' Security Platform v3.2.1', delay: 80, cls: 't-info' },
+    { text: '[  BOOT  ] Kernel loaded \u2014 linux 6.1.0-ctf-amd64', delay: 60, cls: 't-dim' },
+    { text: '', delay: 40 },
+    { text: '[   OK   ] Starting system logger...', delay: 50, cls: 't-ok' },
+    { text: '[   OK   ] Mounting encrypted volumes...', delay: 70, cls: 't-ok' },
+    { text: '[   OK   ] Loading cryptographic modules...', delay: 50, cls: 't-ok' },
+    { text: '[  WARN  ] Firewall rules: 47 active, 3 pending review', delay: 80, cls: 't-warn' },
+    { text: '[   OK   ] Network interface eth0 \u2014 UP', delay: 50, cls: 't-ok' },
+    { text: '[   OK   ] DNS resolver configured...', delay: 40, cls: 't-ok' },
+    { text: '[   OK   ] TLS certificates verified...', delay: 60, cls: 't-ok' },
+    { text: '[   OK   ] Intrusion detection system armed', delay: 50, cls: 't-ok' },
+    { text: '', delay: 30 },
+    { text: '[  INIT  ] Connecting to CTF backend...', delay: 100, cls: 't-info' },
+    { text: '[   OK   ] Database cluster online (3/3 nodes)', delay: 60, cls: 't-ok' },
+    { text: '[   OK   ] Challenge engine initialized', delay: 50, cls: 't-ok' },
+    { text: '[   OK   ] Flag submission service ready', delay: 50, cls: 't-ok' },
+    { text: '[   OK   ] Scoreboard aggregator synced', delay: 50, cls: 't-ok' },
+    { text: '[  WARN  ] Rate limiter: 100 req/min per IP', delay: 60, cls: 't-warn' },
+    { text: '[   OK   ] WebSocket relay started on :8443', delay: 40, cls: 't-ok' },
+    { text: '', delay: 30 },
+    { type: 'progress', text: 'Loading challenge database', delay: 30 },
+    { text: '', delay: 20 },
+  ];
+
+  async function runBootSequence() {
+    isBooting = true;
+    outputEl.innerHTML = '';
+
+    for (const entry of bootLines) {
+      if (entry.type === 'progress') {
+        await runProgressBar(entry.text);
+      } else if (entry.text === '') {
+        addBlank();
+      } else {
+        addLine(entry.text, entry.cls);
+      }
+      await sleep(entry.delay || 10000);
+    }
+
+    addLine('<span class="t-bold">System ready.</span> Welcome to <span class="t-info">' + escapeHtml(CTF_NAME) + '</span> secure shell.', '');
+    addLine('<span class="t-dim">Type </span><span class="t-cmd">help</span><span class="t-dim"> for available commands, or </span><span class="t-cmd">exit</span><span class="t-dim"> to close the terminal.</span>', '');
+    addBlank();
+
+    setPrompt();
+    inputArea.style.display = 'flex';
+    inputEl.focus();
+    bootComplete = true;
+    isBooting = false;
+
+    localStorage.setItem(STORAGE_KEYS.booted, '1');
+    saveState();
+  }
+
+  async function runProgressBar(label) {
+    const container = document.createElement('div');
+    container.className = 't-line';
+    container.innerHTML = '<span class="t-info">[  LOAD  ] </span>' + escapeHtml(label) + ' <span class="progress-bar-container"><span class="progress-track"><span class="progress-fill"></span></span><span class="progress-pct">0%</span></span>';
+    outputEl.appendChild(container);
+    outputEl.scrollTop = outputEl.scrollHeight;
+
+    const fill = container.querySelector('.progress-fill');
+    const pct = container.querySelector('.progress-pct');
+
+    for (let p = 0; p <= 100; p += 4) {
+      fill.style.width = p + '%';
+      pct.textContent = p + '%';
+      await sleep(18);
+    }
+    fill.style.width = '100%';
+    pct.textContent = '100%';
+  }
+
+  
+  const commands = {
+    help() {
+      addBlank();
+      addLine('<span class="t-bold">\u256d\u2500 Available Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e</span>');
+      addLine('<span class="t-bold">\u2502</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">help</span>         <span class="t-desc">Show this help menu</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">about</span>        <span class="t-desc">About this CTF platform</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">status</span>       <span class="t-desc">Show CTF status & countdown</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">whoami</span>       <span class="t-desc">Display your identity</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">challenges</span>   <span class="t-desc">Navigate to challenges</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">scoreboard</span>   <span class="t-desc">Navigate to scoreboard</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">users</span>        <span class="t-desc">Navigate to users list</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">teams</span>        <span class="t-desc">Navigate to teams list</span>');
+      if (!IS_AUTHED) {
+        addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">login</span>        <span class="t-desc">Go to login page</span>');
+        if (REGISTER_URL == "public") {
+          addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">register</span>     <span class="t-desc">Go to registration page</span>');
+        }
+      }
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">clear</span>        <span class="t-desc">Clear terminal output</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">exit</span>         <span class="t-desc">Close terminal</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">neofetch</span>     <span class="t-desc">System information</span>');
+      addLine('<span class="t-bold">\u2502</span>  <span class="t-cmd">ping</span>         <span class="t-desc">Test connectivity</span>');
+      addLine('<span class="t-bold">\u2502</span>');
+      addLine('<span class="t-bold">\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f</span>');
+      addBlank();
+    },
+
+    about() {
+      addBlank();
+      addLine('<span class="t-bold">' + escapeHtml(CTF_NAME) + '</span>');
+      addLine('<span class="t-dim">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</span>');
+      addLine('<span class="t-desc">A Capture The Flag competition where you can</span>');
+      addLine('<span class="t-desc">test your cybersecurity skills across multiple</span>');
+      addLine('<span class="t-desc">categories: Web, Crypto, Forensics, Pwn, Rev,</span>');
+      addLine('<span class="t-desc">OSINT, and more.</span>');
+      addBlank();
+      addLine('<span class="t-dim">Mode:</span> <span class="t-info">' + escapeHtml(USER_MODE) + '</span>');
+      addLine('<span class="t-dim">Platform:</span> <span class="t-info">CTFd</span>');
+      addBlank();
+    },
+
+    status() {
+      addBlank();
+      const now = Date.now() / 1000;
+      if (!CTF_START && !CTF_END) {
+        addLine('<span class="t-info">[ STATUS ]</span> <span class="t-bold">CTF is open</span> \u2014 no time limits set');
+      } else if (CTF_START && now < CTF_START) {
+        const diff = CTF_START - now;
+        const d = Math.floor(diff / 86400);
+        const h = Math.floor((diff % 86400) / 3600);
+        const m = Math.floor((diff % 3600) / 60);
+        const s = Math.floor(diff % 60);
+        addLine('<span class="t-warn">[ STATUS ]</span> <span class="t-bold">CTF has not started yet</span>');
+        addLine('<span class="t-dim">Starts in:</span> <span class="t-info">' + d + 'd ' + h + 'h ' + m + 'm ' + s + 's</span>');
+      } else if (CTF_END && now > CTF_END) {
+        addLine('<span class="t-fail">[ STATUS ]</span> <span class="t-bold">CTF has ended</span>');
+      } else {
+        addLine('<span class="t-ok">[ STATUS ]</span> <span class="t-bold">CTF is LIVE!</span>');
+        if (CTF_END) {
+          const diff = CTF_END - now;
+          const d = Math.floor(diff / 86400);
+          const h = Math.floor((diff % 86400) / 3600);
+          const m = Math.floor((diff % 3600) / 60);
+          const s = Math.floor(diff % 60);
+          addLine('<span class="t-dim">Time remaining:</span> <span class="t-warn">' + d + 'd ' + h + 'h ' + m + 'm ' + s + 's</span>');
+        }
+      }
+      addBlank();
+    },
+
+    whoami() {
+      addBlank();
+      if (IS_AUTHED) {
+        addLine('<span class="t-ok">Authenticated as:</span> <span class="t-bold">' + escapeHtml(USER_NAME) + '</span>');
+        addLine('<span class="t-dim">Mode:</span> ' + escapeHtml(USER_MODE));
+      } else if (REGISTER_URL == "private") {
+        addLine('<span class="t-warn">Not authenticated.</span> You are a guest.');
+        addLine('<span class="t-dim">Use </span><span class="t-cmd">login</span><span class="t-dim"> to authenticate.</span>');
+      }
+      else {
+        addLine('<span class="t-warn">Not authenticated.</span> You are a guest.');
+        addLine('<span class="t-dim">Use </span><span class="t-cmd">login</span><span class="t-dim"> or </span><span class="t-cmd">register</span><span class="t-dim"> to authenticate.</span>');
+      }
+      addBlank();
+    },
+
+    clear() {
+      outputEl.innerHTML = '';
+      saveState();
+    },
+
+    exit() {
+      closeTerminal();
+    },
+
+    challenges() {
+      addLine('<span class="t-info">Redirecting to challenges...</span>');
+      saveState();
+      setTimeout(function() { window.location.href = '{{ url_for("challenges.listing") }}'; }, 400);
+    },
+
+    scoreboard() {
+      addLine('<span class="t-info">Redirecting to scoreboard...</span>');
+      saveState();
+      setTimeout(function() { window.location.href = '{{ url_for("scoreboard.listing") }}'; }, 400);
+    },
+
+    users() {
+      addLine('<span class="t-info">Redirecting to users...</span>');
+      saveState();
+      setTimeout(function() { window.location.href = '{{ url_for("users.listing") }}'; }, 400);
+    },
+
+    teams() {
+      addLine('<span class="t-info">Redirecting to teams...</span>');
+      saveState();
+      setTimeout(function() {
+        {% if Configs.user_mode == 'teams' %}
+          window.location.href = '{{ url_for("teams.listing") }}';
+        {% else %}
+          addLine('<span class="t-warn">Team mode is not enabled.</span>');
+        {% endif %}
+      }, 400);
+    },
+
+    login() {
+      if (IS_AUTHED) {
+        addLine('<span class="t-ok">You are already logged in!</span>');
+        return;
+      }
+      addLine('<span class="t-info">Redirecting to login...</span>');
+      saveState();
+      setTimeout(function() { window.location.href = '{{ url_for("auth.login") }}'; }, 400);
+    },
+
+    register() {
+      if (IS_AUTHED) {
+        addLine('<span class="t-ok">You are already registered and logged in!</span>');
+        return;
+      }
+      addLine('<span class="t-info">Redirecting to registration...</span>');
+      saveState();
+      setTimeout(function() { window.location.href = '{{ url_for("auth.register") }}'; }, 400);
+    },
+
+    async neofetch() {
+      addBlank();
+      var info = [
+        ['OS',       'CTFd Linux x86_64'],
+        ['Host',     escapeHtml(CTF_NAME)],
+        ['Kernel',   '6.1.0-ctf-amd64'],
+        ['Shell',    'ctf-sh 3.2.1'],
+        ['User',     IS_AUTHED ? escapeHtml(USER_NAME) : 'guest'],
+        ['Mode',     escapeHtml(USER_MODE)],
+        ['Terminal', 'cyber-terminal'],
+        ['Theme',    'ctfd-theme-modern (dark)'],
+      ];
+
+      var miniArt = [
+        ' _____ ___    _     ____ _____ _____',
+        '|  ___|_ _|  / \\   / ___|_   _|  ___|',
+        '| |_   | |  / _ \\ | |     | | | |_   ',
+        '|  _|  | | / ___ \\| |___  | | |  _|  ',
+        '|_|   |___/_/   \\_\\____| |_| |_|     ',
+        '',
+        '',
+        '',
+      ];
+
+      var maxLen = 0;
+      for (var j = 0; j < miniArt.length; j++) {
+        if (miniArt[j].length > maxLen) maxLen = miniArt[j].length;
+      }
+      for (var j = 0; j < miniArt.length; j++) {
+        while (miniArt[j].length < maxLen) miniArt[j] += ' ';
+      }
+
+      var rows = Math.max(miniArt.length, info.length);
+      for (var i = 0; i < rows; i++) {
+        var art = (i < miniArt.length) ? miniArt[i] : '';
+        while (art.length < maxLen) art += ' ';
+        var inf = info[i] ? '<span class="t-info">' + info[i][0] + '</span><span class="t-dim">:</span> ' + info[i][1] : '';
+        addLine('<span class="t-ascii">' + art + '</span>  ' + inf);
+        await sleep(40);
+      }
+      addBlank();
+    },
+
+    async ping() {
+      addBlank();
+      addLine('<span class="t-dim">PING ' + escapeHtml(CTF_NAME) + ' (127.0.0.1) 56(84) bytes of data.</span>');
+      for (var i = 1; i <= 4; i++) {
+        await sleep(300 + Math.random() * 200);
+        var ms = (Math.random() * 2 + 0.3).toFixed(3);
+        addLine('<span class="t-dim">64 bytes from 127.0.0.1: icmp_seq=' + i + ' ttl=64 time=</span><span class="t-ok">' + ms + ' ms</span>');
+      }
+      addBlank();
+      addLine('<span class="t-dim">--- ping statistics ---</span>');
+      addLine('<span class="t-dim">4 packets transmitted, 4 received, </span><span class="t-ok">0% packet loss</span>');
+      addBlank();
+    },
+  };
+
+  
+  function handleCommand(raw) {
+    var input = raw.trim().toLowerCase();
+    if (!input) return;
+
+    commandHistory.unshift(raw);
+    if (commandHistory.length > 50) commandHistory.length = 50;
+    historyIndex = -1;
+
+    addLine('<span class="t-dim">' + escapeHtml(promptText.textContent) + '</span> <span class="t-bold">' + escapeHtml(raw) + '</span>');
+
+    if (commands[input]) {
+      commands[input]();
+    } else {
+      addLine('<span class="t-fail">command not found:</span> ' + escapeHtml(input));
+      addLine('<span class="t-dim">Type </span><span class="t-cmd">help</span><span class="t-dim"> to see available commands.</span>');
+      addBlank();
+    }
+
+    saveState();
+  }
+
+  
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      var val = inputEl.value;
+      inputEl.value = '';
+      handleCommand(val);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++;
+        inputEl.value = commandHistory[historyIndex];
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex > 0) {
+        historyIndex--;
+        inputEl.value = commandHistory[historyIndex];
+      } else {
+        historyIndex = -1;
+        inputEl.value = '';
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      var partial = inputEl.value.trim().toLowerCase();
+      if (partial) {
+        var matches = Object.keys(commands).filter(function(c) { return c.startsWith(partial); });
+        if (matches.length === 1) {
+          inputEl.value = matches[0];
+        } else if (matches.length > 1) {
+          addLine('<span class="t-dim">' + escapeHtml(promptText.textContent) + '</span> <span class="t-bold">' + escapeHtml(partial) + '</span>');
+          addLine('<span class="t-desc">' + matches.join('  ') + '</span>');
+        }
+      }
+    } else if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault();
+      commands.clear();
+    } else if (e.key === 'Escape') {
+      closeTerminal();
+    }
+  });
+
+  outputEl.addEventListener('click', function() {
+    if (bootComplete) inputEl.focus();
+  });
+
+  
+  function openTerminal() {
+    if (isOpen || isBooting) return;
+    isOpen = true;
+
+    var hasBooted = localStorage.getItem(STORAGE_KEYS.booted);
+
+    terminalEl.classList.add('terminal-visible');
+    terminalEl.classList.remove('terminal-exit');
+    document.body.classList.add('terminal-open');
+    toggleBtn.classList.add('hidden');
+
+    if (hasBooted) {
+      restoreState();
+      inputEl.focus();
+    } else {
+      runBootSequence();
+    }
+
+    document.dispatchEvent(new CustomEvent('terminal:opened'));
+  }
+
+  function closeTerminal() {
+    if (!isOpen) return;
+
+    saveState();
+    isOpen = false;
+    terminalEl.classList.add('terminal-exit');
+
+    setTimeout(function() {
+      terminalEl.classList.remove('terminal-visible');
+      terminalEl.classList.remove('terminal-exit');
+      document.body.classList.remove('terminal-open');
+      toggleBtn.classList.remove('hidden');
+      document.dispatchEvent(new CustomEvent('terminal:closed'));
+    }, 500);
+  }
+
+  
+  toggleBtn.addEventListener('click', function() {
+    if (isOpen) closeTerminal(); else openTerminal();
+  });
+
+  dotClose.addEventListener('click', function() {
+    closeTerminal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === '`' || e.code === 'Backquote')) {
+      e.preventDefault();
+      if (isOpen) closeTerminal(); else openTerminal();
+    }
+  });
+
+  window.addEventListener('beforeunload', function() {
+    if (isOpen) saveState();
+  });
+  
+  return {
+    open: openTerminal,
+    close: closeTerminal,
+    isOpen: function() { return isOpen; },
+    hasBooted: function() { return !!localStorage.getItem(STORAGE_KEYS.booted); },
+  };
+})();
+</script>
