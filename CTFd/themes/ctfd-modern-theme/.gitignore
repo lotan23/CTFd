@@ -24,9 +24,9 @@ AGENTS.md
 *.sw?
 graphify-out/
 
-static/assets/
-static/webfonts/
-static/img/
+# NOTE: Vite build output under static/ is committed on purpose, matching the
+# core/admin themes. CTFd serves themes from these prebuilt assets and the
+# Dockerfile has no build step, so static/assets, static/webfonts and
+# static/img must be tracked. Rebuild with `npm install && npm run build`.
 
-package-lock.json
 yarn.lock

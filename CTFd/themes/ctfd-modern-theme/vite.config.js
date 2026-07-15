@@ -27,19 +27,19 @@ export default defineConfig({
         copy({
           targets: [
             {
-              src: "./node_modules/@fortawesome/fontawesome-free/webfonts*",
+              src: "./node_modules/@fortawesome/fontawesome-free/webfonts/*",
               dest: "static/webfonts",
             },
             {
-              src: "./node_modules/@fontsource/jetbrains-mono/files*400*-normal*",
+              src: "./node_modules/@fontsource/jetbrains-mono/files/*400*-normal*",
               dest: "static/webfonts",
             },
             {
-              src: "./node_modules/@fontsource/jetbrains-mono/files*700*-normal*",
+              src: "./node_modules/@fontsource/jetbrains-mono/files/*700*-normal*",
               dest: "static/webfonts",
             },
             {
-              src: "./node_modules/@fontsource/jetbrains-mono/files*500*-normal*",
+              src: "./node_modules/@fontsource/jetbrains-mono/files/*500*-normal*",
               dest: "static/webfonts",
             },
             {
