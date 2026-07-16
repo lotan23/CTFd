@@ -22,12 +22,22 @@
     <div class="collapse navbar-collapse" id="base-navbars">
       <ul class="navbar-nav me-auto">
         {% for page in Plugins.user_menu_pages %}
+          {% if page.route != '/writeups' or authed() %}
           <li class="nav-item">
-            <a class="nav-link px-3 py-2 rounded-pill fw-500" href="{{ page.route }}" {% if page.link_target %}target="{{ page.link_target }}"{% endif %} title="{{ page.title }}">
-              <i class="fas fa-link me-1 nav-icon"></i>
+            <a
+              class="nav-link px-3 py-2 rounded-pill fw-500"
+              href="{{ page.route }}"
+              {% if page.link_target %}target="{{ page.link_target }}"{% endif %}
+              title="{{ page.title }}"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              data-bs-custom-class="sidebar-tooltip"
+            >
+              <i class="fas {{ 'fa-file-signature' if page.route == '/writeups' else 'fa-link' }} me-1 nav-icon"></i>
               <span class="nav-label">{{ page.title }}</span>
             </a>
           </li>
+          {% endif %}
         {% endfor %}
 
         <li class="nav-item">
