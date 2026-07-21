@@ -21,6 +21,20 @@
 
     <div class="collapse navbar-collapse" id="base-navbars">
       <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a
+            class="nav-link px-3 py-2 rounded-pill fw-500"
+            href="/"
+            title="{% trans %}Home{% endtrans %}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="right"
+            data-bs-custom-class="sidebar-tooltip"
+          >
+            <i class="fas fa-home me-1 nav-icon"></i>
+            <span class="nav-label">{% trans %}Home{% endtrans %}</span>
+          </a>
+        </li>
+
         {% set page_icons = {
           '/bloods': 'fa-tint',
           '/writeups': 'fa-file-signature',
