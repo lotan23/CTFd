@@ -61,11 +61,14 @@ Alpine.data("Challenge", () => ({
   submission: "",
   tab: null,
   solves: [],
+  solution: null,
+  solutionLoading: false,
   response: null,
   share_url: null,
   isSubmitting: false,
   submitResult: null,
   showSolvesTab: false,
+  showSolutionTab: false,
 
   async init() {
     highlight();
@@ -99,6 +102,7 @@ Alpine.data("Challenge", () => ({
 
   async showChallenge() {
     this.showSolvesTab = false;
+    this.showSolutionTab = false;
     new Tab(this.$el).show();
   },
 
@@ -118,8 +122,73 @@ Alpine.data("Challenge", () => ({
         solve.date = dayjs(solve.date).format("MMMM Do, h:mm:ss A");
         return solve;
       });
+      this.showSolutionTab = false;
     }
     this.showSolvesTab = !this.showSolvesTab;
+  },
+
+  getSolutionId() {
+    let data = Alpine.store("challenge").data;
+    return data.solution_id;
+  },
+
+  getSolutionState() {
+    let data = Alpine.store("challenge").data;
+    return data.solution_state;
+  },
+
+  setSolutionId(solutionId) {
+    Alpine.store("challenge").data.solution_id = solutionId;
+  },
+
+  async fetchSolution(solutionId) {
+    const response = await CTFd.fetch(`/api/v1/solutions/${solutionId}`, {
+      method: "GET",
+    });
+    const body = await response.json();
+    return body.data;
+  },
+
+  async loadSolution(solutionId) {
+    // Fetch the solution. If the content is already available (visible/admin
+    // or previously unlocked) render it directly.
+    let solution = await this.fetchSolution(solutionId);
+    if (solution && solution.html) {
+      this.solution = addTargetBlank(solution.html);
+      return;
+    }
+
+    // Otherwise the solution is locked. Solutions have no point cost, so we
+    // unlock it and then re-fetch the now-visible content.
+    const unlockResponse = await CTFd.fetch("/api/v1/unlocks", {
+      method: "POST",
+      body: JSON.stringify({ target: solutionId, type: "solutions" }),
+    });
+    const unlock = await unlockResponse.json();
+    if (unlock.success) {
+      solution = await this.fetchSolution(solutionId);
+      this.solution = solution && solution.html ? addTargetBlank(solution.html) : null;
+    } else {
+      this.solution = null;
+    }
+  },
+
+  async toggleSolution() {
+    if (!this.showSolutionTab) {
+      let solutionId = this.getSolutionId();
+      if (!solutionId) return;
+
+      if (!this.solution) {
+        this.solutionLoading = true;
+        try {
+          await this.loadSolution(solutionId);
+        } finally {
+          this.solutionLoading = false;
+        }
+      }
+      this.showSolvesTab = false;
+    }
+    this.showSolutionTab = !this.showSolutionTab;
   },
 
   getNextId() {
@@ -219,6 +288,23 @@ Alpine.data("Challenge", () => ({
       this.submission = "";
     }
 
+    // If the challenge was just solved, an admin-authored "solved"-state
+    // solution may now be available. Refresh the solution id so the Solution
+    // button appears without needing to reload the challenge.
+    if (this.getSolutionId() == null) {
+      let state = this.getSolutionState();
+      let status = this.response.data.status;
+      if (state === "solved" && (status === "correct" || status === "already_solved")) {
+        const response = await CTFd.fetch(`/api/v1/challenges/${this.id}/solution`, {
+          method: "GET",
+        });
+        const body = await response.json();
+        if (body.success && body.data && body.data.id) {
+          this.setSolutionId(body.data.id);
+        }
+      }
+    }
+
     this.$dispatch("load-challenges");
   },
 }));
@@ -260,8 +346,7 @@ Alpine.data("ChallengeBoard", () => ({
         const getSort = new Function(`"use strict"; return (${f})`);
         categories.sort(getSort());
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     return categories;
   },
