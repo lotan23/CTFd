@@ -249,12 +249,44 @@
         </template>
       </div>
     </div>
+
+
+    <div class="challenge-solution-section" x-show="showSolutionTab" x-cloak>
+      <div class="solution-header">
+        <h4>
+          <i class="fas fa-book-open"></i>
+          {% trans %}Solution{% endtrans %}
+        </h4>
+        <button @click="showSolutionTab = false" class="solution-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="solution-body">
+        <div x-show="solutionLoading" class="solution-loading">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          <span>{% trans %}Loading solution...{% endtrans %}</span>
+        </div>
+        <template x-if="!solutionLoading && solution">
+          <div class="solution-content" x-html="solution"></div>
+        </template>
+        <template x-if="!solutionLoading && !solution">
+          <div class="solution-empty">
+            {% trans %}The solution could not be loaded.{% endtrans %}
+          </div>
+        </template>
+      </div>
+    </div>
     
     
     <div class="challenge-modal-footer">
       <button class="solves-toggle-btn" @click="toggleSolves()">
         <i class="fas fa-trophy"></i>
         <span>{% if solves != None %}{{ solves }} {% trans %}Solves{% endtrans %}{% endif %}</span>
+      </button>
+
+      <button class="solution-toggle-btn" x-show="getSolutionId()" x-cloak @click="toggleSolution()">
+        <i class="fas fa-book-open"></i>
+        <span>{% trans %}Solution{% endtrans %}</span>
       </button>
     </div>
   </div>
@@ -854,6 +886,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: center;
+  gap: 12px;
 }
 
 .solves-toggle-btn {
@@ -875,6 +908,127 @@
   background: rgba(255, 255, 255, 0.05);
   color: var(--modal-accent);
   border-color: rgba(var(--modal-accent-rgb), 0.3);
+}
+
+
+.solution-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(var(--modal-accent-rgb), 0.1);
+  border: 1px solid rgba(var(--modal-accent-rgb), 0.3);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--modal-accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solution-toggle-btn:hover {
+  background: rgba(var(--modal-accent-rgb), 0.2);
+  color: var(--modal-accent);
+}
+
+
+.challenge-solution-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0d0d12;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+}
+
+.solution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.solution-header h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--modal-accent);
+  margin: 0;
+}
+
+.solution-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solution-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.solution-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.solution-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.solution-content {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.solution-content code {
+  background: rgba(var(--modal-accent-rgb), 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--modal-accent);
+}
+
+.solution-content pre {
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.solution-content a {
+  color: var(--modal-accent);
+}
+
+.solution-content img {
+  max-width: 100%;
+}
+
+.solution-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #666;
 }
 
 
@@ -1015,5 +1169,32 @@
 
 [data-bs-theme="light"] .next-challenge-btn:hover {
   background: rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .challenge-solution-section {
+  background: #ffffff;
+}
+
+[data-bs-theme="light"] .solution-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .solution-close-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #666;
+}
+
+[data-bs-theme="light"] .solution-close-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+}
+
+[data-bs-theme="light"] .solution-content {
+  color: #444;
+}
+
+[data-bs-theme="light"] .solution-content pre {
+  background: #f6f8fa;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 </style>
