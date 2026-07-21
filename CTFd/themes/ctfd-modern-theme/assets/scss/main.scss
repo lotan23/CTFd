@@ -369,9 +369,21 @@ blockquote {
     }
 
     .navbar-nav.ms-auto {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
       margin-top: 0.5rem !important;
       padding-top: 0.5rem !important;
+    }
+
+    .nav-divider-item {
+      width: 100% !important;
+    }
+
+    .nav-divider,
+    .nav-divider-wrap .nav-divider {
+      display: block;
+      height: 1px;
+      border: none;
+      background-color: rgba(0, 0, 0, 0.1);
+      margin: 0.4rem 1rem;
     }
 
     .dropdown-menu {
@@ -396,10 +408,6 @@ blockquote {
       display: inline !important;
     }
 
-    hr {
-      margin: 0.5rem 0 !important;
-      opacity: 0.15;
-    }
     .btn.btn-primary {
       width: 100% !important;
       text-align: center !important;
@@ -415,8 +423,9 @@ blockquote {
       }
     }
 
-    .navbar-nav.ms-auto {
-      border-top-color: var(--dark-border);
+    .nav-divider,
+    .nav-divider-wrap .nav-divider {
+      background-color: var(--dark-border);
     }
 
     .dropdown-menu {
@@ -609,8 +618,17 @@ blockquote {
       margin: 0 !important;
     }
 
-    hr {
-      display: none !important;
+    .nav-divider-item {
+      margin: 0.15rem 0 !important;
+    }
+
+    .nav-divider,
+    .nav-divider-wrap .nav-divider {
+      display: block;
+      width: 32px;
+      height: 1px;
+      margin: 0.35rem auto;
+      background-color: var(--light-border);
     }
   }
 
@@ -620,6 +638,11 @@ blockquote {
     .nav-link:hover {
       background: #333232 !important;
       color: #ffffff !important;
+    }
+
+    .nav-divider,
+    .nav-divider-wrap .nav-divider {
+      background-color: var(--dark-border);
     }
   }
 
