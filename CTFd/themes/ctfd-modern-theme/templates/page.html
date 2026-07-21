@@ -574,30 +574,10 @@
       showElement(ctaButtons);
     }
 
-    if (!window.CyberTerminal.hasBooted()) {
-      window.CyberTerminal.open();
-    }
-
-    document.addEventListener('terminal:closed', function onClose() {
-      document.body.style.overflow = '';
-      document.removeEventListener('terminal:closed', onClose);
-      if (!hasTypedBefore) {
-        runTypingAnimation();
-      }
-    });
-
-    document.addEventListener('terminal:opened', function() {
-      document.body.style.overflow = 'hidden';
-    });
-
-    if (!window.CyberTerminal.isOpen()) {
-      if (hasTypedBefore) {
-        showInstant();
-      } else {
-        runTypingAnimation();
-      }
-    } else if (hasTypedBefore) {
+    if (hasTypedBefore) {
       showInstant();
+    } else {
+      runTypingAnimation();
     }
       
     function updateCountdown() {
