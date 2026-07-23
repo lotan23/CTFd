@@ -123,12 +123,15 @@
           '/writeups': 'fa-file-signature',
           '/faqs': 'fa-question-circle',
           '/credits': 'fa-award',
-          '/disclaimers': 'fa-exclamation-triangle'
+          '/disclaimers': 'fa-exclamation-triangle',
+          '/tos': 'fa-file-contract'
         } %}
-        {% set info_routes = ['/faqs', '/disclaimers'] %}
+        {% set info_routes = ['/faqs', '/disclaimers', '/credits'] %}
         {% set info_pages = [] %}
+        {% set nav_ns = namespace(bloods_page=None) %}
         {% for page in Plugins.user_menu_pages %}
           {% if page.route in info_routes %}{% set _ = info_pages.append(page) %}{% endif %}
+          {% if page.route == '/bloods' %}{% set nav_ns.bloods_page = page %}{% endif %}
         {% endfor %}
 
         <li class="nav-item nav-flyout-item">
@@ -141,7 +144,8 @@
             <span class="nav-label">{% trans %}Home{% endtrans %}</span>
           </a>
 
-          {% if info_pages %}
+          {% set tos_available = Configs.tos_url or Configs.tos_text %}
+          {% if info_pages or tos_available %}
           <div class="nav-flyout" role="menu" aria-label="{% trans %}Information{% endtrans %}">
             <div class="nav-flyout-header">{% trans %}Information{% endtrans %}</div>
             {% for page in info_pages %}
@@ -155,6 +159,16 @@
                 <span>{{ page.title }}</span>
               </a>
             {% endfor %}
+            {% if tos_available %}
+              <a
+                class="nav-flyout-link"
+                href="{{ Configs.tos_link }}"
+                role="menuitem"
+              >
+                <i class="fas {{ page_icons.get('/tos', 'fa-file-contract') }}"></i>
+                <span>{% trans %}Terms of Service{% endtrans %}</span>
+              </a>
+            {% endif %}
           </div>
           {% endif %}
         </li>
@@ -164,7 +178,7 @@
         </li>
 
         {% for page in Plugins.user_menu_pages %}
-          {% if page.route not in info_routes and (page.route != '/writeups' or authed()) %}
+          {% if page.route not in info_routes and page.route != '/bloods' and (page.route != '/writeups' or authed()) %}
           <li class="nav-item">
             <a
               class="nav-link px-3 py-2 rounded-pill fw-500"
@@ -195,6 +209,23 @@
             <span class="nav-label">{% trans %}Challenges{% endtrans %}</span>
           </a>
         </li>
+
+        {% if nav_ns.bloods_page %}
+          <li class="nav-item">
+            <a
+              class="nav-link px-3 py-2 rounded-pill fw-500"
+              href="{{ nav_ns.bloods_page.route }}"
+              {% if nav_ns.bloods_page.link_target %}target="{{ nav_ns.bloods_page.link_target }}"{% endif %}
+              title="{{ nav_ns.bloods_page.title }}"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              data-bs-custom-class="sidebar-tooltip"
+            >
+              <i class="fas {{ page_icons.get(nav_ns.bloods_page.route, 'fa-link') }} me-1 nav-icon"></i>
+              <span class="nav-label">{{ nav_ns.bloods_page.title }}</span>
+            </a>
+          </li>
+        {% endif %}
 
         {% if Configs.account_visibility != 'admins' and Configs.score_visibility != 'admins' %}
           <li class="nav-item">
